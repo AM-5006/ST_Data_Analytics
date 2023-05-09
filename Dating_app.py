@@ -19,6 +19,7 @@ def calculate_age(DOB):
 
 def Filter(first_name, last_name):
     female = df_female[(df_female["First Name"]==first_name) & (df_female["Last Name"]==last_name)]
+    print(f'\nFemale details:\n{female}\n')
     try:
         Age = int(female["Age"])
         Height = int(female["Height"])
@@ -27,7 +28,8 @@ def Filter(first_name, last_name):
         result = df_male[(df_male["Age"] > Age) & (df_male["Height"] > Height) &(df_male["Community Preference"] == Community_Preference) & (df_male["Religion"] == Religion)]
         return result
     except Exception as e:
-        return -1
+        return None
+
 
 if __name__=='__main__':
     df = pd.read_csv("Python Intership Assignment - Data.csv")
@@ -39,13 +41,16 @@ if __name__=='__main__':
     df_male = df[df["Gender"]=="Male"]
     df_female = df[df["Gender"]=="Female"]
 
+
     FN = input("Enter the first name: ")
     LN = input("Enter the last name: ")
 
     result = Filter(FN, LN)
-    print(result)
-    if result == -1:
+    if result.empty: 
         print("No match found")
+    elif result is None:
+        print("Error")
     else:
-        result.to_csv(f'Matching_for_{FN}_{LN}_.csv', index=False)
+        print(f'\nMatching Profiles:\n {result}')
+        result.to_csv(f'Matching_for_{FN}_{LN}.csv', index=False)
 
