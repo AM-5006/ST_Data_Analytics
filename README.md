@@ -5,6 +5,5 @@
 2. Traverse to: ```cd ST_Data_Anaytics```<br>
 3. Install the required dependencies: ```pip3 install -r requirements.txt```
 
-### Usage:
-1. Create ```Output``` folder. 
-2. Run the python program: ```python3 Task1.py```
+### Usage: 
+1. Run the python program: ```python3 Task1.py```
