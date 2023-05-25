@@ -49,20 +49,39 @@ def cleansing_community(community):
                 result.append((c1, c2))
     return result
 
-def matching(male_df, female):
+def get_status(female_fname, female_lname, male_fname, male_lname, community_name):
+    try:
+        status_df = pd.read_excel('Community_status.xlsx', sheet_name=community_name.upper())
+        row_index = status_df.index[(status_df['First Name'] == female_fname) & (status_df['Last Name'] == female_lname)].tolist()[0]
+        sliced_df = status_df.iloc[row_index+2:]
+        for index, row in sliced_df.iterrows():
+            if row.isna().all():
+                return None
+            if row["First Name"] == male_fname and row["Last Name"] == male_lname:
+                return row["Status"]
+    except Exception as e:
+        # print(e)
+        return None
+
+
+def matching(male_df, female, community_name):
     try:
         Age = female["Age"]
         Height = female["Height"]
-        Caste_Preference = female["Caste Preference"]
+        # Caste_Preference = female["Caste Preference"]
 
         if pd.notna(Age) and pd.notna(Height): 
             result = male_df[(male_df["Age"] > Age) & (male_df["Height"] > Height)]
-            return result
+            status_col = ["NA", ""]
+            for index, row in result.iterrows():
+                status = get_status(female["First Name"], female["Last Name"], row["First Name"], row["Last Name"], community_name)
+                status_col.append(status)
+            return (result, status_col)
         else:
-            return None
+            return (None, None)
     except Exception as e:
         print(e)
-        return None
+        return (None, None)
 
 if __name__=='__main__':
     df = pd.read_csv("Data.csv")
@@ -86,14 +105,14 @@ if __name__=='__main__':
 
     for i in df['Community'].unique():
         community_df = df[(df["Community"] == i)]
-        male_df = community_df[(community_df["Gender"] == "Male")]
+        male_df = pd.DataFrame(community_df[(community_df["Gender"] == "Male")])
         female_df = community_df[(community_df["Gender"] == "Female")]
         try:
             writer = pd.ExcelWriter(f'Output/{i}.xlsx', engine ='openpyxl')
             community_df.to_excel(writer, sheet_name=i, index=False)
             male_df.to_excel(writer, sheet_name=(i+"-Male"), index = False)
             female_df.to_excel(writer, sheet_name=(i+"-Female"), index = False)
-            i = 0
+            k = 0
             for index, row in female_df.iterrows():
                 result = pd.DataFrame()
                 result = result.append(row, ignore_index=True)
@@ -101,11 +120,12 @@ if __name__=='__main__':
                 empty_row = pd.Series({}, dtype=object)
                 result = result.append(empty_row, ignore_index=True)
 
-                result = result.append(matching(male_df, row), ignore_index=True)
-                result["Status"] = ""           #add status column
+                matched_df, status_col = matching(male_df, row, i) 
+                result = result.append(matched_df, ignore_index=True)
+                result["Status"] = status_col
 
-                result.to_excel(writer, sheet_name=(f'{i}_{row["First Name"]}_{row["Last Name"]}'), index=False)
-                i += 1
+                result.to_excel(writer, sheet_name=(f'{k}_{row["First Name"]}_{row["Last Name"]}'), index=False)
+                k += 1
         except Exception as e:
             print(e) 
         finally:
